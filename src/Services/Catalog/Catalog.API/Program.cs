@@ -58,3 +58,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Marker class for WebApplicationFactory
+public partial class Program { }
