@@ -1,0 +1,112 @@
+{
+  "ReverseProxy": {
+    "Routes": {
+      "catalog-route": {
+        "ClusterId": "catalog-cluster",
+        "AuthorizationPolicy": "default",
+        "RateLimiterPolicy": "fixed",
+        "Match": {
+          "Path": "/api/catalog/{**catch-all}"
+        },
+        "Transforms": [
+          {
+            "PathRemovePrefix": "/api/catalog"
+          },
+          {
+            "PathPrefix": "/api/v1"
+          },
+          {
+            "RequestHeader": "X-Forwarded-Prefix",
+            "Set": "/api/catalog"
+          }
+        ]
+      },
+      "catalog-health-route": {
+        "ClusterId": "catalog-cluster",
+        "AuthorizationPolicy": "anonymous",
+        "Match": {
+          "Path": "/api/catalog/health/{**catch-all}"
+        },
+        "Transforms": [
+          {
+            "PathRemovePrefix": "/api/catalog"
+          }
+        ]
+      },
+      "orders-route": {
+        "ClusterId": "orders-cluster",
+        "AuthorizationPolicy": "default",
+        "RateLimiterPolicy": "fixed",
+        "Match": {
+          "Path": "/api/orders/{**catch-all}"
+        },
+        "Transforms": [
+          {
+            "PathRemovePrefix": "/api/orders"
+          },
+          {
+            "PathPrefix": "/api/v1"
+          },
+          {
+            "RequestHeader": "X-Forwarded-Prefix",
+            "Set": "/api/orders"
+          }
+        ]
+      },
+      "orders-health-route": {
+        "ClusterId": "orders-cluster",
+        "AuthorizationPolicy": "anonymous",
+        "Match": {
+          "Path": "/api/orders/health/{**catch-all}"
+        },
+        "Transforms": [
+          {
+            "PathRemovePrefix": "/api/orders"
+          }
+        ]
+      }
+    },
+    "Clusters": {
+      "catalog-cluster": {
+        "LoadBalancingPolicy": "RoundRobin",
+        "HealthCheck": {
+          "Active": {
+            "Enabled": true,
+            "Interval": "00:00:30",
+            "Timeout": "00:00:10",
+            "Policy": "ConsecutiveFailures",
+            "Path": "/health"
+          }
+        },
+        "HttpClient": {
+          "RequestTimeout": "00:00:30"
+        },
+        "Destinations": {
+          "catalog-api": {
+            "Address": "http://localhost:5100"
+          }
+        }
+      },
+      "orders-cluster": {
+        "LoadBalancingPolicy": "RoundRobin",
+        "HealthCheck": {
+          "Active": {
+            "Enabled": true,
+            "Interval": "00:00:30",
+            "Timeout": "00:00:10",
+            "Policy": "ConsecutiveFailures",
+            "Path": "/health"
+          }
+        },
+        "HttpClient": {
+          "RequestTimeout": "00:00:30"
+        },
+        "Destinations": {
+          "order-api": {
+            "Address": "http://localhost:5200"
+          }
+        }
+      }
+    }
+  }
+}
