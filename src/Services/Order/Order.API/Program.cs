@@ -5,6 +5,7 @@ using Order.API;
 using Order.API.Middleware;
 using Order.Application;
 using Order.Infrastructure;
+using Order.Infrastructure.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,14 +19,13 @@ builder.Host.UseSerilog();
 
 var app = builder.Build();
 
+// Initialize database
+await app.InitialiseDatabaseAsync();
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Order API v1");
-    });
+    app.MapOpenApi();
 }
 
 // Add correlation middleware

@@ -33,8 +33,9 @@ public static class DependencyInjection
 
         // Add controllers
         services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        
+        // Add OpenAPI support (replaces Swashbuckle in .NET 9+)
+        services.AddOpenApi();
 
         // Add HttpContextAccessor for correlation and token propagation
         services.AddHttpContextAccessor();

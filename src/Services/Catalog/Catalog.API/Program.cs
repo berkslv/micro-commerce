@@ -5,6 +5,7 @@ using Catalog.API;
 using Catalog.API.Middleware;
 using Catalog.Application;
 using Catalog.Infrastructure;
+using Catalog.Infrastructure.Persistence;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -18,6 +19,9 @@ builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Host.UseSerilog();
 
 var app = builder.Build();
+
+// Initialize database
+await app.InitialiseDatabaseAsync();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
