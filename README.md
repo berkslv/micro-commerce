@@ -120,6 +120,22 @@ dotnet run
 
 ## Configuration
 
+### Database Migrations
+
+#### Catalog Service
+```bash
+cd src/Services/Catalog/Catalog.Infrastructure
+dotnet ef migrations add <MigrationName> --startup-project ../Catalog.API --context CatalogDbContext --output-dir Persistence/Migrations
+dotnet ef database update --startup-project ../Catalog.API --context CatalogDbContext
+```
+
+#### Order Service
+```bash
+cd src/Services/Order/Order.Infrastructure
+dotnet ef migrations add <MigrationName> --startup-project ../Order.API --context OrderDbContext --output-dir Persistence/Migrations
+dotnet ef database update --startup-project ../Order.API --context OrderDbContext
+```
+
 ### Connection Strings
 
 Catalog API (`appsettings.json`):

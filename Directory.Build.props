@@ -32,7 +32,7 @@
     <TestcontainersVersion>4.4.0</TestcontainersVersion>
     <CoverletVersion>6.0.4</CoverletVersion>
     <SimmyVersion>8.6.5</SimmyVersion>
-    <NBomberVersion>5.8.0</NBomberVersion>
+    <NBomberVersion>6.0.0</NBomberVersion>
   </PropertyGroup>
 
   <ItemGroup>

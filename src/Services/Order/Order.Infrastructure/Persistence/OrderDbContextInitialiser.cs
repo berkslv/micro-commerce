@@ -98,7 +98,7 @@ public class OrderDbContextInitialiser
                     true)
             };
 
-            await _context.Products.AddRangeAsync(products);
+            _context.Products.AddRange(products);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Seeded {Count} products", products.Length);
@@ -183,7 +183,7 @@ public class OrderDbContextInitialiser
                     Money.Create(products[2].Price, products[2].Currency),
                     1);
 
-                await _context.Orders.AddRangeAsync(new[] { order1, order2, order3 });
+                _context.Orders.AddRange(new[] { order1, order2, order3 });
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Seeded {Count} orders", 3);

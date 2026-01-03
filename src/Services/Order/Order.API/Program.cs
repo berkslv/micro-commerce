@@ -6,6 +6,7 @@ using Order.API.Middleware;
 using Order.Application;
 using Order.Infrastructure;
 using Order.Infrastructure.Persistence;
+using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,7 @@ await app.InitialiseDatabaseAsync();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 // Add correlation middleware

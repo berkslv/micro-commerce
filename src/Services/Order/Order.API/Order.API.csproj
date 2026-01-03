@@ -10,6 +10,11 @@
     <PackageReference Include="MassTransit" Version="$(MassTransitVersion)" />
     <PackageReference Include="MassTransit.EntityFrameworkCore" Version="$(MassTransitVersion)" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="$(MassTransitVersion)" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.0.18" />
     <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogAspNetCoreVersion)" />
     <PackageReference Include="Serilog.Sinks.Console" Version="$(SerilogSinksConsoleVersion)" />
     <PackageReference Include="Serilog.Sinks.File" Version="$(SerilogSinksFileVersion)" />
