@@ -5,7 +5,7 @@ using BuildingBlocks.Messaging.Models;
 using Order.API.Consumers;
 using Order.Infrastructure.Persistence;
 using MassTransit;
-using Serilog;
+using MassTransit.Logging;
 
 namespace Order.API;
 
@@ -24,13 +24,6 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Configure Serilog
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .CreateLogger();
-
         // Add controllers
         services.AddControllers();
         

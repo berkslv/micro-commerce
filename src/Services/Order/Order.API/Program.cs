@@ -1,6 +1,7 @@
 using BuildingBlocks.Messaging.Filters.Correlations;
 using BuildingBlocks.Messaging.Filters.Localization;
 using BuildingBlocks.Messaging.Filters.Tokens;
+using BuildingBlocks.Observability;
 using Order.API;
 using Order.API.Middleware;
 using Order.Application;
@@ -11,12 +12,13 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add OpenTelemetry observability
+builder.AddObservability();
+
 // Add services from all layers
 builder.Services.AddOrderApi(builder.Configuration);
 builder.Services.AddOrderApplication();
 builder.Services.AddOrderInfrastructure(builder.Configuration);
-
-builder.Host.UseSerilog();
 
 var app = builder.Build();
 

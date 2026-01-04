@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using BuildingBlocks.Observability;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -6,11 +7,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
-builder.Host.UseSerilog((context, loggerConfig) =>
-{
-    loggerConfig.ReadFrom.Configuration(context.Configuration);
-});
+// Add OpenTelemetry observability
+builder.AddObservability();
 
 // Add YARP Reverse Proxy
 builder.Services.AddReverseProxy()

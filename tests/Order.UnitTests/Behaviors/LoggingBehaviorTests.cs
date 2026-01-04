@@ -1,18 +1,23 @@
+using BuildingBlocks.Observability.Metrics;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Order.Application.Behaviors;
+using System.Diagnostics.Metrics;
 
 namespace Order.UnitTests.Behaviors;
 
 public class LoggingBehaviorTests
 {
     private readonly Mock<ILogger<LoggingBehavior<TestRequest, TestResponse>>> _mockLogger;
+    private readonly MediatRMetrics _metrics;
     private readonly LoggingBehavior<TestRequest, TestResponse> _behavior;
 
     public LoggingBehaviorTests()
     {
         _mockLogger = new Mock<ILogger<LoggingBehavior<TestRequest, TestResponse>>>();
-        _behavior = new LoggingBehavior<TestRequest, TestResponse>(_mockLogger.Object);
+        var meterFactory = new TestMeterFactory();
+        _metrics = new MediatRMetrics(meterFactory);
+        _behavior = new LoggingBehavior<TestRequest, TestResponse>(_mockLogger.Object, _metrics);
     }
 
     [Fact]
@@ -94,6 +99,30 @@ public class LoggingBehaviorTests
 
         // Assert
         result.Should().Be(expectedResponse);
+    }
+}
+
+/// <summary>
+/// Test implementation of IMeterFactory for unit testing
+/// </summary>
+public sealed class TestMeterFactory : IMeterFactory
+{
+    private readonly List<Meter> _meters = new();
+
+    public Meter Create(MeterOptions options)
+    {
+        var meter = new Meter(options.Name, options.Version);
+        _meters.Add(meter);
+        return meter;
+    }
+
+    public void Dispose()
+    {
+        foreach (var meter in _meters)
+        {
+            meter.Dispose();
+        }
+        _meters.Clear();
     }
 }
 

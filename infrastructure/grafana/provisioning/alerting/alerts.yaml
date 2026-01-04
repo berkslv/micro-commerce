@@ -1,0 +1,97 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: LatencyAlerts
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: high-latency-alert
+        title: High Request Latency (>1000ms)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: histogram_quantile(0.95, sum(rate(microcommerce_http_server_request_duration_seconds_bucket[5m])) by (le, job)) * 1000
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1000
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Request latency P95 is above 1000ms for {{ $labels.service_name }}"
+          description: "The 95th percentile request latency for {{ $labels.service_name }} has exceeded 1000ms. Current value: {{ $value }}ms"
+        labels:
+          severity: warning
+
+      - uid: high-error-rate-alert
+        title: High Error Rate (>5%)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum(rate(microcommerce_mediatr_requests_errors_total[5m])) by (service_name) 
+                / 
+                sum(rate(microcommerce_mediatr_requests_total[5m])) by (service_name) 
+                * 100
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Error rate is above 5% for {{ $labels.service_name }}"
+          description: "The error rate for {{ $labels.service_name }} has exceeded 5%. Current value: {{ $value }}%"
+        labels:
+          severity: critical

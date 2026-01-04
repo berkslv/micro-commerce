@@ -1,4 +1,5 @@
 using System.Reflection;
+using BuildingBlocks.Observability.Metrics;
 using Order.Application.Behaviors;
 using FluentValidation;
 using MediatR;
@@ -23,6 +24,9 @@ public static class DependencyInjection
 
         // Register FluentValidation validators
         services.AddValidatorsFromAssembly(assembly);
+
+        // Register MediatR metrics
+        services.AddSingleton<MediatRMetrics>();
 
         // Register pipeline behaviors
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));

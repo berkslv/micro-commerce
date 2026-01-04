@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingBlocks.Common", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingBlocks.Messaging", "src\BuildingBlocks\BuildingBlocks.Messaging\BuildingBlocks.Messaging.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingBlocks.Observability", "src\BuildingBlocks\BuildingBlocks.Observability\BuildingBlocks.Observability.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.Domain", "src\Services\Catalog\Catalog.Domain\Catalog.Domain.csproj", "{B2C3D4E5-F678-9012-BCDE-F12345678901}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.Application", "src\Services\Catalog\Catalog.Application\Catalog.Application.csproj", "{B2C3D4E5-F678-9012-BCDE-F12345678902}"
@@ -42,6 +44,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Order", "Order", "{B851199A-4979-E597-3D50-97AC5992BBAF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.IntegrationTests", "tests\Catalog.IntegrationTests\Catalog.IntegrationTests.csproj", "{E6F144D1-4D1A-4EAC-AF61-6334D401E6B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingBlocks", "{F302A086-3B48-4E0E-B13E-564882628879}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -242,5 +246,9 @@ Global
 		{8FE8D149-F462-4A7F-97D9-ABC536C704F7} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{B851199A-4979-E597-3D50-97AC5992BBAF} = {984BB9B3-3FA3-BE33-9484-CAC21695A33C}
 		{E6F144D1-4D1A-4EAC-AF61-6334D401E6B8} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{F302A086-3B48-4E0E-B13E-564882628879} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {F302A086-3B48-4E0E-B13E-564882628879}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567891} = {F302A086-3B48-4E0E-B13E-564882628879}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567892} = {F302A086-3B48-4E0E-B13E-564882628879}
 	EndGlobalSection
 EndGlobal

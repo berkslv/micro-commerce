@@ -1,163 +1,229 @@
 # Micro E-Commerce Platform
 
-A microservices-based e-commerce platform built with .NET 10.0, Clean Architecture, and Domain-Driven Design principles.
+A production-ready **microservices e-commerce platform** built with .NET 10, demonstrating enterprise patterns including Clean Architecture, Domain-Driven Design, Event-Driven Choreography, and full observability.
 
-## Architecture Overview
+---
 
-This project implements a microservices architecture with the following services:
+## 🛠️ Tech Stack
 
-- **Catalog Service**: Manages products and categories
-- **Order Service**: Handles order processing and management
+| Category          | Technologies                                     |
+| ----------------- | ------------------------------------------------ |
+| **Backend**       | .NET 10, C# 13, .NET Core                        |
+| **Architecture**  | Clean Architecture, DDD, CQRS                    |
+| **Messaging**     | RabbitMQ, MassTransit (Inbox/Outbox Pattern)     |
+| **Database**      | PostgreSQL with Entity Framework Core as ORM     |
+| **API Gateway**   | YARP (Reverse Proxy, Rate Limiting, Routing)     |
+| **Identity**      | Keycloak (OAuth 2.0 / OpenID Connect / JWT)      |
+| **Observability** | OpenTelemetry, Prometheus, Grafana, Seq          |
+| **Resilience**    | Polly (Retry, Circuit Breaker, Timeout)          |
+| **Testing**       | xUnit, FluentAssertions, Testcontainers, NBomber |
+| **DevOps**        | Docker                                           |
 
-### Technology Stack
+---
 
-- **.NET 10.0** - Target framework
-- **MassTransit 8.5.7** - Message broker abstraction with RabbitMQ
-- **MediatR 12.5.0** - CQRS implementation
-- **FluentValidation 12.1.1** - Request validation
-- **Entity Framework Core 10.0.0** - ORM with PostgreSQL
-- **Serilog 4.3.0** - Structured logging
+## 📐 Architecture
 
-### Project Structure
+![Architecture Diagram](docs/Architecture.png)
 
+### Key Patterns & Practices
+
+| Pattern                       | Implementation                                               |
+| ----------------------------- | ------------------------------------------------------------ |
+| **Clean Architecture**        | Domain-centric layers with strict dependency inversion       |
+| **CQRS**                      | Command/Query separation via MediatR with pipeline behaviors |
+| **Domain-Driven Design**      | Aggregates, Value Objects, Domain Events                     |
+| **Event-Driven Choreography** | Decoupled services via RabbitMQ (no orchestrator)            |
+| **Saga with Compensation**    | Stock reservation → Order confirmation / rollback            |
+| **Transactional Outbox**      | MassTransit + PostgreSQL for guaranteed delivery             |
+| **Database per Service**      | Independent data stores for service autonomy                 |
+| **Event Sourcing**            | Product read models synced via domain events                 |
+
+---
+
+## 🔐 Authentication & Authorization
+
+**Keycloak** provides centralized identity management with OAuth 2.0 / OpenID Connect.
+
+| Configuration | Value                                             |
+| ------------- | ------------------------------------------------- |
+| **Realm**     | `microservices`                                   |
+| **Clients**   | `catalog-service`, `order-service`, `api-gateway` |
+| **Roles**     | `catalog-admin`, `order-admin`, `customer`        |
+| **Port**      | 8080                                              |
+
+JWT tokens are validated at the API Gateway, propagating claims to downstream services via correlation headers.
+
+---
+
+## 🔄 Event-Driven Saga Flow
+
+Order placement follows a **choreography-based saga pattern** with automatic compensation:
+
+```mermaid
+sequenceDiagram
+    participant Customer
+    participant OrderService as Order Service
+    participant RabbitMQ as Message Bus
+    participant CatalogService as Catalog Service
+
+    Customer->>OrderService: POST /api/orders
+    activate OrderService
+    OrderService->>OrderService: Create Order (Status: Pending)
+    OrderService->>RabbitMQ: Publish OrderCreatedEvent
+    OrderService-->>Customer: 202 Accepted (orderId)
+    deactivate OrderService
+
+    RabbitMQ->>CatalogService: OrderCreatedEvent
+    activate CatalogService
+    CatalogService->>CatalogService: Validate Stock
+    
+    alt Stock Available (Success Path)
+        CatalogService->>CatalogService: Deduct Stock (HARD)
+        CatalogService->>RabbitMQ: Publish StockReservedEvent
+        deactivate CatalogService
+        
+        RabbitMQ->>OrderService: StockReservedEvent
+        activate OrderService
+        OrderService->>OrderService: Update Status → Confirmed
+        OrderService->>RabbitMQ: Publish OrderConfirmedEvent
+        deactivate OrderService
+        Note over OrderService: ✅ Order Completed
+        
+    else Insufficient Stock (Failure Path)
+        CatalogService->>RabbitMQ: Publish StockReservationFailedEvent
+        
+        RabbitMQ->>OrderService: StockReservationFailedEvent
+        activate OrderService
+        OrderService->>OrderService: Update Status → Cancelled
+        OrderService->>RabbitMQ: Publish OrderCancelledEvent
+        deactivate OrderService
+        Note over OrderService: ❌ Order Cancelled (Compensation)
+    end
 ```
-Micro/
-├── src/
-│   ├── BuildingBlocks/
-│   │   ├── BuildingBlocks.Common/       # Shared domain primitives & exceptions
-│   │   └── BuildingBlocks.Messaging/    # Events, filters, and models
-│   └── Services/
-│       ├── Catalog/
-│       │   ├── Catalog.Domain/          # Entities, value objects
-│       │   ├── Catalog.Application/     # CQRS commands, queries, behaviors
-│       │   ├── Catalog.Infrastructure/  # EF Core, MassTransit consumers
-│       │   └── Catalog.API/             # REST API
-│       └── Order/
-│           ├── Order.Domain/
-│           ├── Order.Application/
-│           ├── Order.Infrastructure/
-│           └── Order.API/
-├── docker-compose.yml
-├── Directory.Build.props
-└── Micro.sln
+
+**Key Characteristics:**
+- **No Orchestrator**: Services react to events autonomously
+- **Transactional Outbox**: Guaranteed message delivery via PostgreSQL
+- **Idempotency**: Events processed exactly once via MassTransit Inbox
+- **Compensation**: Automatic rollback on failure
+
+---
+
+## 🔭 Observability
+
+Full observability stack with **OpenTelemetry** for distributed tracing, metrics, and structured logging.
+
+![Grafana Dashboard](docs/grafana.png)
+
+| Component                   | Purpose                                | Port       |
+| --------------------------- | -------------------------------------- | ---------- |
+| **OpenTelemetry Collector** | Telemetry aggregation & export         | 4317, 4318 |
+| **Prometheus**              | Metrics storage & querying             | 9090       |
+| **Grafana**                 | Dashboards & alerting                  | 3000       |
+| **Seq**                     | Structured logging & trace correlation | 8081       |
+
+![Seq Logging](docs/seq.png)
+
+### Custom Metrics
+
+| Metric                                               | Description                         |
+| ---------------------------------------------------- | ----------------------------------- |
+| `microcommerce_mediatr_request_duration`             | MediatR handler latency (histogram) |
+| `microcommerce_mediatr_requests_total`               | Request count by handler & status   |
+| `microcommerce_http_server_request_duration_seconds` | HTTP endpoint performance           |
+
+---
+
+## 🧪 Testing Strategy
+
+Comprehensive testing with **80%+ code coverage** target.
+
+| Test Type             | Tools                                 | Purpose                             |
+| --------------------- | ------------------------------------- | ----------------------------------- |
+| **Unit Tests**        | xUnit, FluentAssertions, NSubstitute  | Domain logic & handlers             |
+| **Integration Tests** | Testcontainers, WebApplicationFactory | API & database verification         |
+| **Load Tests**        | NBomber                               | Performance (100-500 RPS scenarios) |
+| **Chaos Tests**       | Simmy, Polly                          | Fault injection & resilience        |
+
+```bash
+# Run all tests with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Generate coverage report
+reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport"
 ```
 
-## Getting Started
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- .NET 10.0 SDK
+- .NET 10 SDK
 - Docker & Docker Compose
-- PostgreSQL 16+ (or use Docker)
-- RabbitMQ (or use Docker)
 
-### Running with Docker Compose
+### Run with Docker
 
 ```bash
 # Start all services
-docker-compose up -d
+docker-compose -f docker-compose.dev.yml up -d
 
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
+# Access points
+# API Gateway:  http://localhost:5000
+# Catalog API:  http://localhost:5100
+# Order API:    http://localhost:5200
+# Keycloak:     http://localhost:8080 (admin/admin)
+# Grafana:      http://localhost:3000 (admin/admin)
+# Seq:          http://localhost:8081
+# RabbitMQ:     http://localhost:15672 (guest/guest)
 ```
 
-### Running Locally
+### Run Locally
 
-1. Start infrastructure:
 ```bash
-docker-compose up -d catalog-db order-db rabbitmq
+# Start infrastructure
+docker-compose -f docker-compose.dev.yml up -d
+
+# Run services
+dotnet run --project src/Services/Catalog/Catalog.API
+dotnet run --project src/Services/Order/Order.API
+dotnet run --project src/ApiGateway/Gateway
 ```
 
-2. Run Catalog API:
-```bash
-cd src/Services/Catalog/Catalog.API
-dotnet run
+---
+
+## 📁 Project Structure
+
+```
+├── src/
+│   ├── ApiGateway/Gateway/              # YARP reverse proxy + Keycloak auth
+│   ├── BuildingBlocks/
+│   │   ├── BuildingBlocks.Common/       # Base entities, Value Objects, Exceptions
+│   │   ├── BuildingBlocks.Messaging/    # Event contracts, MassTransit filters
+│   │   └── BuildingBlocks.Observability/ # OpenTelemetry setup
+│   └── Services/
+│       ├── Catalog/
+│       │   ├── Catalog.Domain/          # Product, Category aggregates
+│       │   ├── Catalog.Application/     # CQRS handlers, validators
+│       │   ├── Catalog.Infrastructure/  # EF Core, MassTransit consumers
+│       │   └── Catalog.API/             # REST endpoints
+│       └── Order/                       # Same Clean Architecture layers
+├── tests/
+│   ├── Catalog.UnitTests/
+│   ├── Catalog.IntegrationTests/
+│   ├── Order.UnitTests/
+│   ├── Order.IntegrationTests/
+│   ├── LoadTests/                       # NBomber performance scenarios
+│   └── ChaosTests/                      # Simmy fault injection
+└── infrastructure/
+    ├── k8s/                             # Kubernetes manifests
+    ├── keycloak/                        # Realm export configuration
+    ├── grafana/                         # Dashboard provisioning
+    ├── prometheus/                      # Scrape configs & alerts
+    └── otel/                            # Collector configuration
 ```
 
-3. Run Order API (in another terminal):
-```bash
-cd src/Services/Order/Order.API
-dotnet run
-```
+---
 
-### API Endpoints
-
-#### Catalog API (http://localhost:5100)
-- `GET /api/products` - Get all products
-- `GET /api/products/{id}` - Get product by ID
-- `GET /api/products/paginated` - Get products with pagination
-- `POST /api/products` - Create a product
-- `PUT /api/products/{id}` - Update a product
-- `DELETE /api/products/{id}` - Delete a product
-
-#### Order API (http://localhost:5200)
-- `GET /api/orders/{id}` - Get order by ID
-- `GET /api/orders/customer/{customerId}` - Get orders by customer
-- `POST /api/orders` - Create an order
-- `POST /api/orders/{id}/confirm` - Confirm an order
-- `POST /api/orders/{id}/cancel` - Cancel an order
-
-## Event Flow
-
-1. **Order Created**: When an order is created, `OrderCreatedEvent` is published
-2. **Stock Reserved**: Catalog service reserves stock and publishes `StockReservedEvent`
-3. **Order Confirmed**: Order service updates order status
-4. **Stock Reservation Failed**: If stock is insufficient, `StockReservationFailedEvent` is published
-5. **Order Cancelled**: If order is cancelled, `OrderCancelledEvent` triggers stock restoration
-
-## Key Features
-
-- **Clean Architecture**: Domain-centric design with clear separation of concerns
-- **CQRS Pattern**: Commands and queries are separated using MediatR
-- **Domain Events**: Changes are communicated through domain events
-- **MassTransit Inbox/Outbox**: Reliable message delivery with PostgreSQL storage
-- **Correlation Tracking**: Request correlation across services
-- **Validation**: FluentValidation for request validation
-- **Exception Handling**: Global exception handling middleware
-
-## Configuration
-
-### Database Migrations
-
-#### Catalog Service
-```bash
-cd src/Services/Catalog/Catalog.Infrastructure
-dotnet ef migrations add <MigrationName> --startup-project ../Catalog.API --context CatalogDbContext --output-dir Persistence/Migrations
-dotnet ef database update --startup-project ../Catalog.API --context CatalogDbContext
-```
-
-#### Order Service
-```bash
-cd src/Services/Order/Order.Infrastructure
-dotnet ef migrations add <MigrationName> --startup-project ../Order.API --context OrderDbContext --output-dir Persistence/Migrations
-dotnet ef database update --startup-project ../Order.API --context OrderDbContext
-```
-
-### Connection Strings
-
-Catalog API (`appsettings.json`):
-```json
-{
-  "ConnectionStrings": {
-    "CatalogDb": "Host=localhost;Port=5432;Database=catalog_db;Username=postgres;Password=postgres",
-    "RabbitMq": "amqp://guest:guest@localhost:5672"
-  }
-}
-```
-
-Order API (`appsettings.json`):
-```json
-{
-  "ConnectionStrings": {
-    "OrderDb": "Host=localhost;Port=5432;Database=order_db;Username=postgres;Password=postgres",
-    "RabbitMq": "amqp://guest:guest@localhost:5672"
-  }
-}
-```
-
-## License
+## 📄 License
 
 MIT
